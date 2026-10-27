@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meu Pet Virtual</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:18px;background:linear-gradient(140deg,#f3efff,#e4fbff);font:16px system-ui;color:#30264a;display:flex;justify-content:center}.app{width:min(700px,100%)}h1{text-align:center;color:#7857d9}.card{background:white;border:2px solid #e7dfff;border-radius:22px;padding:16px;margin:12px 0;box-shadow:0 8px 24px #33225510}.scene{height:240px;border-radius:18px;background:linear-gradient(#dff7ff 65%,#baf0cf 65%);display:grid;place-items:center;position:relative;overflow:hidden}.pet{font-size:100px}.speech{position:absolute;bottom:10px;background:#ffffffdf;border-radius:12px;padding:8px 12px;text-align:center;font-weight:bold}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.track{height:10px;background:#eee8f6;border-radius:9px;overflow:hidden;margin-top:7px}.fill{height:100%;width:50%;background:#72d9bd}.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}button{border:0;border-radius:13px;padding:13px;background:#7857d9;color:white;font:bold 16px system-ui;cursor:pointer}button:disabled{opacity:.5}.actions button{background:#fff;color:#30264a;border:2px solid #e7dfff}input,select{padding:9px;border:2px solid #e7dfff;border-radius:10px;max-width:100%}.center{text-align:center}.note{font-size:14px;color:#665b7a;line-height:1.5}.end{display:none;background:#fff0f3;padding:12px;border-radius:12px;text-align:center}.end.show{display:block}@media(max-width:480px){.stats{grid-template-columns:1fr}.scene{height:210px}}
+</style>
+<main class="app">
+<h1>🐾 Meu Pet Virtual</h1><p class="center">Cuide do seu amiguinho todos os dias!</p>
+<section class="card"><div class="scene"><div class="pet" id="pet">🐶</div><div class="speech" id="speech">Oi! Vamos ser melhores amigos?</div></div>
+<p class="center">Nome: <input id="name" value="Pipoca" maxlength="18"> <select id="kind"><option>🐶</option><option>🐱</option><option>🐰</option><option>🐼</option><option>🦊</option></select></p></section>
+<section class="card"><div class="stats">
+<div><b>🍎 Fome <span id="hungerN">20</span>%</b><div class="track"><div class="fill" id="hunger"></div></div></div>
+<div><b>💖 Alegria <span id="happyN">90</span>%</b><div class="track"><div class="fill" id="happy" style="background:#ff8fb1"></div></div></div>
+<div><b>⚡ Energia <span id="energyN">85</span>%</b><div class="track"><div class="fill" id="energy" style="background:#79b8ff"></div></div></div></div><p class="center" id="status">Seu pet está feliz e saudável! ✨</p>
+<div class="end" id="end"><b>Fim de jogo 🐾</b><p>Seu pet esperou por muito tempo. Você pode começar uma nova aventura.</p><button id="restart">Adotar outro pet</button></div></section>
+<section class="card"><h2>O que vamos fazer?</h2><div class="actions"><button id="feed">🥣 Dar comida</button><button id="play">🎾 Brincar</button><button id="sleep">🛏️ Descansar</button><button id="wash">🧼 Dar banho</button></div></section>
+<section class="card"><h3>⏰ Regra das 48 horas</h3><p class="note">O jogo guarda a última visita neste navegador. Se você ficar 48 horas sem abrir o jogo, a partida termina. O progresso fica salvo neste dispositivo; não apague os dados do navegador se quiser continuar.</p><p class="note" id="last"></p></section>
+</main>
+<script>
+const $=id=>document.getElementById(id),KEY="meuPetSave1",LIMIT=48*60*60*1000;
+const fresh=()=>({kind:"🐶",name:"Pipoca",hunger:20,happy:90,energy:85,last:Date.now(),ended:false});
+let s=fresh();try{const old=JSON.parse(localStorage.getItem(KEY));if(old&&typeof old.last==="number")s={...s,...old}}catch(e){}
+if(Date.now()-s.last>=LIMIT)s.ended=true;
+else if(!s.ended){let hours=(Date.now()-s.last)/3600000;s.hunger=Math.min(100,s.hunger+hours*4);s.happy=Math.max(0,s.happy-hours*3.5);s.energy=Math.max(0,s.energy-hours*2.5)}
+function save(){s.last=Date.now();localStorage.setItem(KEY,JSON.stringify(s))}
+function render(){ $("pet").textContent=s.kind;$("name").value=s.name;$("kind").value=s.kind;
+for(const k of ["hunger","happy","energy"]){$(k).style.width=s[k]+"%";$(k+"N").textContent=Math.round(s[k])}
+$("speech").textContent=s.ended?"A aventura terminou.":s.hunger>75?"Estou com fome! 🥺":s.energy<25?"Estou cansadinho.":"Obrigado por cuidar de mim! 💖";
+$("status").textContent=s.ended?"Seu pet esperou por 48 horas.":s.hunger>75||s.happy<25||s.energy<20?"Atenção! Seu pet precisa de cuidados. 🐾":"Seu pet está feliz e saudável! ✨";
+$("end").classList.toggle("show",s.ended);["feed","play","sleep","wash","name","kind"].forEach(id=>$(id).disabled=s.ended);$("last").textContent="Última visita: "+new Date(s.last).toLocaleString("pt-BR")}
+function act(a){if(s.ended)return;if(a==="feed"){s.hunger=Math.max(0,s.hunger-35);s.happy=Math.min(100,s.happy+5)}if(a==="play"){s.happy=Math.min(100,s.happy+22);s.energy=Math.max(0,s.energy-18);s.hunger=Math.min(100,s.hunger+10)}if(a==="sleep"){s.energy=Math.min(100,s.energy+35);s.hunger=Math.min(100,s.hunger+8)}if(a==="wash"){s.happy=Math.min(100,s.happy+8);s.energy=Math.max(0,s.energy-4)}save();render()}
+$("feed").onclick=()=>act("feed");$("play").onclick=()=>act("play");$("sleep").onclick=()=>act("sleep");$("wash").onclick=()=>act("wash");
+$("name").onchange=e=>{s.name=e.target.value.trim()||"Pipoca";save();render()};$("kind").onchange=e=>{s.kind=e.target.value;save();render()};
+$("restart").onclick=()=>{s=fresh();s.kind=$("kind").value||"🐶";save();render()};
+save();render();
+</script></html>
